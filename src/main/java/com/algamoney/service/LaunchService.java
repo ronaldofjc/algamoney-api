@@ -2,7 +2,9 @@ package com.algamoney.service;
 
 import java.util.Optional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import com.algamoney.model.Launch;
@@ -33,6 +35,25 @@ public class LaunchService {
 		}
 		
 		return launchRepository.save(launch);
+	}
+	
+	public Launch update(Long id, Launch launch) {
+		Launch launchSaved = findLaunch(id);
+		
+		if (!launchSaved.getPerson().getName().equals(launch.getPerson().getName())) {
+			validatePerson(launch);
+		}
+		
+		BeanUtils.copyProperties(launch, launchSaved, "id");
+		return launchRepository.save(launchSaved);
+	}
+
+	public void validatePerson(Launch launch) {
+		personRepository.findById(launch.getPerson().getId()).orElseThrow(() -> new PersonInexistentException());
+	}
+
+	public Launch findLaunch(Long id) {
+		return launchRepository.findById(id).orElseThrow(() -> new EmptyResultDataAccessException(1));
 	}
 
 }
